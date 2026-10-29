@@ -1,0 +1,10 @@
+# AI_GENERATE_START -
+.venv/
+build/
+dist/
+*.egg-info/
+__pycache__/
+.env
+data/
+browsers/
+# AI_GENERATE_END -
