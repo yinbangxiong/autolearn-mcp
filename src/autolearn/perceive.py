@@ -1,4 +1,4 @@
-﻿# AI_GENERATE_START -----
+﻿# AI_GENERATE_START ------
 # -*- coding: utf-8 -*-
 """感知层：穿透 iframe 提取页面可交互元素，生成 LLM 可读的紧凑页面状态。
 
@@ -6,6 +6,10 @@
 元素携带 frame 字段供执行层定位到正确的帧。
 除标准控件外，还会扫描"有直接文本 + pointer 光标"的自定义容器（Element UI 等组件库的
 菜单/页签多用 div 实现），避免顶部导航等关键入口漏识别。
+表单设计器类页面的拖拽源组件（draggable=true / grab 光标）也纳入编号，
+供 act drag 动作作 from_idx 引用。
+Element Plus 下拉容器 .el-select__wrapper（显示值在内部 span、无直接文本）与展开后的
+选项 .el-select-dropdown__item 单独纳入编号；含 is-disabled 类的元素跳过。
 """
 
 EXTRACT_JS = r"""
@@ -14,9 +18,9 @@ EXTRACT_JS = r"""
   const seen = new Set();
   const els = [];
   const add = (el) => { if (el && !seen.has(el)) { seen.add(el); els.push(el); } };
-  const SEL = 'a, button, input, select, textarea, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="combobox"], [role="option"], [onclick], .el-menu-item, .el-submenu__title, .el-tabs__item, .el-dropdown-menu__item, .el-link, .el-checkbox, .el-radio, .el-switch, [class*="menu-item"], [class*="nav-item"], [class*="tab-item"]';
+  const SEL = 'a, button, input, select, textarea, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="combobox"], [role="option"], [onclick], [draggable="true"], .el-menu-item, .el-submenu__title, .el-tabs__item, .el-dropdown-menu__item, .el-link, .el-checkbox, .el-radio, .el-switch, .el-select__wrapper, .el-select-dropdown__item, [class*="menu-item"], [class*="nav-item"], [class*="tab-item"]';
   document.querySelectorAll(SEL).forEach(add);
-  // 自定义导航启发式：叶子容器 + 直接文本 + pointer 光标
+  // 自定义导航启发式：叶子容器 + 直接文本 + pointer/grab 光标（grab 为拖拽源组件）
   const customs = document.querySelectorAll('div, span, li, p');
   const maxScan = Math.min(customs.length, 800);
   for (let i = 0; i < maxScan && els.length < 400; i++) {
@@ -29,13 +33,15 @@ EXTRACT_JS = r"""
     if (!hasText) continue;
     let cs;
     try { cs = getComputedStyle(el); } catch (e) { continue; }
-    if (cs.cursor === 'pointer') add(el);
+    if (cs.cursor === 'pointer' || cs.cursor === 'grab') add(el);
   }
   const out = [];
   let seq = offset;
   for (const el of els) {
     if (out.length >= 150) break;
     if (el.disabled) continue;
+    // Element Plus 禁用态（el-select__wrapper.is-disabled 等）不可点击，跳过
+    if (el.classList && el.classList.contains('is-disabled')) continue;
     let rect;
     try { rect = el.getBoundingClientRect(); } catch (e) { continue; }
     if (!rect || rect.width < 2 || rect.height < 2) continue;
@@ -136,5 +142,5 @@ def find_element(state, idx):
         if el["idx"] == idx:
             return el
     return None
-# AI_GENERATE_END -----
+# AI_GENERATE_END -------
 

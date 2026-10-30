@@ -1,4 +1,4 @@
-﻿# AI_GENERATE_START -
+﻿# AI_GENERATE_START --
 # -*- coding: utf-8 -*-
 """技能回放引擎：按程序记忆的步骤自动执行并逐步自愈。
 
@@ -58,7 +58,7 @@ async def replay_skill(page, context, skill: dict, params: dict, recorder, shot_
         action = str(step.get("action", "")).lower()
         step_params = {k: v for k, v in step.items() if k not in ("action", "note", "name_hint", "expect_text", "expect_url_contains")}
         element = None
-        if action == "click" or "idx" in step_params:
+        if action == "click" or "idx" in step_params or "from_idx" in step_params:
             hint = str(step.get("name_hint") or step.get("expect_name") or "")
             try:
                 step_params, element = await _resolve_by_name(page, hint, step_params)
@@ -112,5 +112,5 @@ async def replay_skill(page, context, skill: dict, params: dict, recorder, shot_
             break
 
     return all_ok, f"技能「{skill.get('name')}」回放{'成功' if all_ok else '中断'}: " + "；".join(results), page
-# AI_GENERATE_END -
+# AI_GENERATE_END --
 

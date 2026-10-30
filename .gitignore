@@ -1,4 +1,4 @@
-# AI_GENERATE_START -
+# AI_GENERATE_START --
 .venv/
 build/
 dist/
@@ -7,4 +7,5 @@ __pycache__/
 .env
 data/
 browsers/
-# AI_GENERATE_END -
+debug.log
+# AI_GENERATE_END --

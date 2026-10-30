@@ -1,22 +1,28 @@
-﻿# AI_GENERATE_START -
+# AI_GENERATE_START --
 # -*- coding: utf-8 -*-
-"""情景记忆记录器：每个会话一个目录，逐步写入 JSONL，可选逐步截图。"""
+"""情景记忆记录器：每个会话一个目录，逐步写入 JSONL，可选逐步截图。
+
+会话按系统归档：data/sessions/<system>/<时间戳>/；
+system 为空时归入 _global（跨系统通用目录）。
+"""
 
 import json
 import time
 from pathlib import Path
 
 from autolearn.config import DATA_DIR
+from autolearn.systems import GLOBAL_SYSTEM
 
 
 class SessionRecorder:
-    """一次探索会话 = data/sessions/<时间戳>/ 下的 session.jsonl + shots/ 截图。"""
+    """一次探索会话 = data/sessions/<system>/<时间戳>/ 下的 session.jsonl + shots/ 截图。"""
 
-    def __init__(self, goal: str):
-        self.dir: Path = DATA_DIR / "sessions" / time.strftime("%Y%m%d_%H%M%S")
+    def __init__(self, goal: str, system: str = ""):
+        self.system = system or GLOBAL_SYSTEM
+        self.dir: Path = DATA_DIR / "sessions" / self.system / time.strftime("%Y%m%d_%H%M%S")
         (self.dir / "shots").mkdir(parents=True, exist_ok=True)
         self.file: Path = self.dir / "session.jsonl"
-        self.record("session_start", goal=goal)
+        self.record("session_start", goal=goal, system=self.system)
 
     def record(self, type_: str, **fields):
         """追加一条记忆事件（JSONL，UTF-8）。"""
@@ -36,5 +42,4 @@ class SessionRecorder:
     @property
     def session_dir(self) -> str:
         return str(self.dir)
-# AI_GENERATE_END -
-
+# AI_GENERATE_END --
